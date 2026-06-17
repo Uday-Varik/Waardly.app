@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Waardly is an AI-powered wardrobe assistant. Photograph your clothes, calibrate your color theory skin tone undertones, and see yourself wearing custom outfit combinations through photorealistic virtual try-ons." />
+    <title>Waardly — AI-Powered Virtual Try-On & Closet Matchmaker</title>
+  </head>
+  <body>
+    <!-- Smartphone Bezel Framework for Desktop Simulation -->
+    <div class="desktop-bezel">
+      <div class="phone-notch"></div>
+      <div class="phone-status-bar">
+        <span id="phone-clock">12:00</span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <span>LTE</span>
+          <span>📶</span>
+          <span>🔋</span>
+        </div>
+      </div>
+      
+      <!-- React app mounts here -->
+      <div id="root"></div>
+      
+      <div class="phone-home-bar"></div>
+    </div>
+
+    <!-- Script to update phone clock in real-time -->
+    <script>
+      function updatePhoneClock() {
+        const clockEl = document.getElementById('phone-clock');
+        if (clockEl) {
+          const now = new Date();
+          let hours = now.getHours();
+          const minutes = now.getMinutes().toString().padStart(2, '0');
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          hours = hours % 12;
+          hours = hours ? hours : 12; // the hour '0' should be '12'
+          clockEl.textContent = hours + ':' + minutes + ' ' + ampm;
+        }
+      }
+      updatePhoneClock();
+      setInterval(updatePhoneClock, 60000);
+    </script>
+
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
