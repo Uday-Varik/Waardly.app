@@ -202,7 +202,7 @@ const WardrobeView = () => {
                 <h4 style={{ fontSize: '1.05rem', fontWeight: 500, margin: 0 }}>Connect Purchase Invoices</h4>
               </div>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: '20px' }}>
-                Build your wardrobe catalog automatically by uploading receipts or copy-pasting order details from Amazon, Myntra, or Ajio invoices.
+                Build your wardrobe catalog automatically by uploading receipts or copy-pasting order details from Amazon, Myntra or Ajio invoices.
               </p>
 
               {/* Paste box / file input mock */}

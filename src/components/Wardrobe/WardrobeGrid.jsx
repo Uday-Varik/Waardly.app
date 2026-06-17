@@ -3,7 +3,7 @@ import { AppContext } from '../../context/AppContext';
 import { Search, SlidersHorizontal, Trash2, Plus, ArrowDownToLine, Info } from 'lucide-react';
 
 const WardrobeGrid = ({ onOpenScan }) => {
-  const { wardrobe, removeWardrobeItem, importLuxuryEssentials, clearWardrobe } = useContext(AppContext);
+  const { wardrobe, removeWardrobeItem, importLuxuryEssentials, clearWardrobe, tryOnItem } = useContext(AppContext);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [filterOccasion, setFilterOccasion] = useState('All');
@@ -219,7 +219,7 @@ const WardrobeGrid = ({ onOpenScan }) => {
                 />
                 
                 {/* Category Badge overlay */}
-                <span style={{ position: 'absolute', bottom: '6px', left: '6px', fontSize: '0.6rem', padding: '2px 6px', backgroundColor: 'var(--text-primary)', color: 'var(--bg-surface)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                <span style={{ position: 'absolute', bottom: '6px', left: '6px', fontSize: '0.65rem', padding: '2px 6px', backgroundColor: 'var(--text-primary)', color: 'var(--bg-surface)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
                   {item.category}
                 </span>
 
@@ -255,23 +255,53 @@ const WardrobeGrid = ({ onOpenScan }) => {
                     {item.formalLevel}
                   </span>
                   
-                  <button
-                    onClick={() => removeWardrobeItem(item.id)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--text-tertiary)',
-                      padding: '4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      borderRadius: '50%'
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.color = 'var(--error-rose)'}
-                    onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button
+                      onClick={() => tryOnItem(item)}
+                      title="Try On Silhouette"
+                      style={{
+                        background: 'none',
+                        border: '1px solid var(--accent-gold)',
+                        color: 'var(--accent-gold)',
+                        cursor: 'pointer',
+                        padding: '3px 8px',
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        borderRadius: '2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'var(--transition-fast)'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--accent-gold)';
+                        e.currentTarget.style.color = '#FFFFFF';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = 'var(--accent-gold)';
+                      }}
+                    >
+                      Fit
+                    </button>
+                    <button
+                      onClick={() => removeWardrobeItem(item.id)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-tertiary)',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '50%'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.color = 'var(--error-rose)'}
+                      onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

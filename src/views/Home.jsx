@@ -7,14 +7,21 @@ import { Sparkles, Calendar, PlusCircle, CheckCircle, Share2, Download, MessageC
 import BrandMonogram from '../components/Common/BrandMonogram';
 
 const Home = () => {
-  const { wardrobe, userProfile, dailyLogs, isPremium } = useContext(AppContext);
+  const { 
+    wardrobe, 
+    userProfile, 
+    dailyLogs, 
+    isPremium, 
+    activeTryOn, 
+    loadTryOn, 
+    clearTryOn 
+  } = useContext(AppContext);
 
   // Styling query states
   const [occasion, setOccasion] = useState('Work');
   const [contextText, setContextText] = useState('');
   
   // Suggestion results
-  const [suggestion, setSuggestion] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -30,6 +37,13 @@ const Home = () => {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const occasions = ['Work', 'Date', 'Party', 'Casual', 'Formal', 'Travel', 'Gym'];
+
+  const isTryOnEmpty = !activeTryOn.top && !activeTryOn.bottom && !activeTryOn.outerwear && !activeTryOn.footwear;
+
+  const handleClearLook = () => {
+    clearTryOn();
+    setHasSearched(false);
+  };
 
   const inspirations = [
     {
@@ -65,6 +79,19 @@ const Home = () => {
   const loadInspiration = (ins) => {
     setOccasion(ins.occasion);
     setContextText(ins.vibe);
+    
+    // Attempt to match mock items in the closet
+    const words = ins.name.toLowerCase().split(' ');
+    
+    // Find matching outerwear or top
+    const outerwear = wardrobe.find(i => i.category === 'Outerwear' && words.some(w => i.name.toLowerCase().includes(w))) || wardrobe.find(i => i.category === 'Outerwear') || null;
+    const top = wardrobe.find(i => i.category === 'Tops' && words.some(w => i.name.toLowerCase().includes(w))) || wardrobe.find(i => i.category === 'Tops') || null;
+    const bottom = wardrobe.find(i => i.category === 'Bottoms') || wardrobe.find(i => i.category === 'Bottoms') || null;
+    const footwear = wardrobe.find(i => i.category === 'Footwear') || null;
+
+    loadTryOn({ top, bottom, outerwear, footwear });
+    setHasSearched(true);
+
     const container = document.querySelector('.main-content');
     if (container) {
       container.scrollTo({ top: 0, behavior: 'smooth' });
@@ -122,7 +149,7 @@ const Home = () => {
       
       const footwear = shoes[Math.floor(Math.random() * shoes.length)] || null;
 
-      setSuggestion({ top, bottom, outerwear, footwear });
+      loadTryOn({ top, bottom, outerwear, footwear });
       setHasSearched(true);
       setIsGenerating(false);
     }, 1200);
@@ -261,6 +288,48 @@ const Home = () => {
         )}
       </div>
 
+      {/* Flagship Virtual Fitting Studio Centerpiece */}
+      {userProfile.referencePhoto && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '0 20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 500, margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={16} color="var(--accent-gold)" /> Virtual Fitting Studio
+            </h3>
+            {!isTryOnEmpty && (
+              <button 
+                onClick={handleClearLook}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--error-rose)',
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+              >
+                Clear Look
+              </button>
+            )}
+          </div>
+          
+          <InteractiveCanvas
+            referencePhoto={userProfile.referencePhoto}
+            topItem={activeTryOn.top}
+            bottomItem={activeTryOn.bottom}
+            outerwearItem={activeTryOn.outerwear}
+            footwearItem={activeTryOn.footwear}
+          />
+
+          {isTryOnEmpty && (
+            <div style={{ textAlign: 'center', padding: '16px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem', fontStyle: 'italic', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-sm)', marginTop: '8px' }}>
+              Tap a garment in your Wardrobe or generate an outfit below to begin styling.
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Occasion Selection & Query Builder */}
       <div className="vogue-card" style={{ padding: '24px 20px', margin: '0 20px' }}>
         <span className="badge-gold" style={{ marginBottom: '8px' }}>Occasion Engine</span>
@@ -315,30 +384,18 @@ const Home = () => {
         </button>
       </div>
 
-      {/* Suggestion & Canvas Try-On Results */}
-      {hasSearched && suggestion && (
+      {/* Try-On Details Card (Feature 2.2 / 5-Layer Justification) */}
+      {!isTryOnEmpty && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '0 20px', animation: 'var(--transition-normal) fadeIn' }}>
-          
-          {/* Draggable Try On Canvas */}
-          <InteractiveCanvas
-            referencePhoto={userProfile.referencePhoto}
-            topItem={suggestion.top}
-            bottomItem={suggestion.bottom}
-            outerwearItem={suggestion.outerwear}
-            footwearItem={suggestion.footwear}
-          />
-
-          {/* Details and Drawer */}
           <TryOnCard
-            top={suggestion.top}
-            bottom={suggestion.bottom}
-            outerwear={suggestion.outerwear}
-            footwear={suggestion.footwear}
+            top={activeTryOn.top}
+            bottom={activeTryOn.bottom}
+            outerwear={activeTryOn.outerwear}
+            footwear={activeTryOn.footwear}
             occasion={occasion}
             contextText={contextText}
             onShareClick={() => setShowShareModal(true)}
           />
-
         </div>
       )}
 
@@ -410,7 +467,7 @@ const Home = () => {
       )}
 
       {/* Premium Polaroid Share Modal (Feature 4.1) */}
-      {showShareModal && suggestion && (
+      {showShareModal && !isTryOnEmpty && (
         <div
           style={{
             position: 'fixed',
@@ -471,14 +528,14 @@ const Home = () => {
                 <img src={userProfile.referencePhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 
                 {/* Simulated overlays */}
-                {suggestion.bottom && (
-                  <img src={suggestion.bottom.image} alt="" style={{ position: 'absolute', left: '50%', top: '65%', transform: 'translate(-50%, -50%) scale(0.6)', height: '140px', objectFit: 'contain' }} />
+                {activeTryOn.bottom && (
+                  <img src={activeTryOn.bottom.image} alt="" style={{ position: 'absolute', left: '50%', top: '65%', transform: 'translate(-50%, -50%) scale(0.6)', height: '140px', objectFit: 'contain' }} />
                 )}
-                {suggestion.top && (
-                  <img src={suggestion.top.image} alt="" style={{ position: 'absolute', left: '52%', top: '45%', transform: 'translate(-50%, -50%) scale(0.55)', height: '140px', objectFit: 'contain' }} />
+                {activeTryOn.top && (
+                  <img src={activeTryOn.top.image} alt="" style={{ position: 'absolute', left: '52%', top: '45%', transform: 'translate(-50%, -50%) scale(0.55)', height: '140px', objectFit: 'contain' }} />
                 )}
-                {suggestion.outerwear && (
-                  <img src={suggestion.outerwear.image} alt="" style={{ position: 'absolute', left: '48%', top: '42%', transform: 'translate(-50%, -50%) scale(0.6)', height: '140px', objectFit: 'contain' }} />
+                {activeTryOn.outerwear && (
+                  <img src={activeTryOn.outerwear.image} alt="" style={{ position: 'absolute', left: '48%', top: '42%', transform: 'translate(-50%, -50%) scale(0.6)', height: '140px', objectFit: 'contain' }} />
                 )}
 
                 {/* PREMIUM WATERMARK (Feature 4.1) */}
