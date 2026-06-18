@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Layers, Move, RefreshCw, ZoomIn, RotateCw, Eye } from 'lucide-react';
+import { AppContext } from '../../context/AppContext';
 
 // Helper to remove solid white background on the fly using a border-aware flood-fill algorithm
 const processGarmentImage = (url) => {
@@ -96,11 +97,66 @@ const processGarmentImage = (url) => {
   });
 };
 
+const getShoulderWidth = (shape) => {
+  if (shape === 'Hourglass') return 42;
+  if (shape === 'Pear') return 35;
+  if (shape === 'Inverted Triangle') return 48;
+  if (shape === 'Rectangle') return 40;
+  return 42; // Apple/Athletic
+};
+
+const getMannequinPath = (shape) => {
+  let wShoulder = 40;
+  let wWaist = 24;
+  let wHip = 42;
+  
+  if (shape === 'Hourglass') {
+    wShoulder = 42;
+    wWaist = 18;
+    wHip = 44;
+  } else if (shape === 'Pear') {
+    wShoulder = 35;
+    wWaist = 22;
+    wHip = 48;
+  } else if (shape === 'Inverted Triangle') {
+    wShoulder = 48;
+    wWaist = 24;
+    wHip = 34;
+  } else if (shape === 'Rectangle') {
+    wShoulder = 40;
+    wWaist = 32;
+    wHip = 38;
+  } else if (shape === 'Apple' || shape === 'Athletic') {
+    wShoulder = 42;
+    wWaist = 28;
+    wHip = 40;
+  }
+
+  // Center is 180, Neck connection ends at y=80 (left: 174, right: 186)
+  return `
+    M 174,80 
+    C 165,85 165,90 ${180 - wShoulder},95 
+    C ${180 - wShoulder - 5},120 ${180 - wWaist - 15},155 ${180 - wWaist},180 
+    C ${180 - wWaist + 10},205 ${180 - wHip - 5},215 ${180 - wHip},240 
+    C ${180 - wHip},270 155,310 157,360
+    L 172,360
+    C 172,320 178,290 180,265
+    C 182,290 188,320 188,360
+    L 203,360
+    C 205,310 180 + wHip,270 ${180 + wHip},240
+    C ${180 + wHip + 5},215 ${180 + wWaist - 10},205 ${180 + wWaist},180
+    C ${180 + wWaist + 15},155 ${180 + wShoulder + 5},120 ${180 + wShoulder},95
+    C 195,90 195,85 186,80
+    Z
+  `;
+};
+
 const InteractiveCanvas = ({ referencePhoto, topItem, bottomItem, outerwearItem, footwearItem }) => {
+  const { userProfile } = useContext(AppContext);
   const containerRef = useRef(null);
   const [layers, setLayers] = useState([]);
   const [selectedLayerId, setSelectedLayerId] = useState(null);
-  const [showOriginal, setShowOriginal] = useState(false);
+  const [backdropMode, setBackdropMode] = useState('mannequin'); // 'mannequin' or 'photo'
   const [containerWidth, setContainerWidth] = useState(360);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -327,20 +383,76 @@ const InteractiveCanvas = ({ referencePhoto, topItem, bottomItem, outerwearItem,
           }
         `}</style>
 
-        {/* User reference photo */}
-        <img
-          src={referencePhoto}
-          alt="Base Silhouette"
-          draggable="false"
-          style={{
-            height: '100%',
-            width: '100%',
-            objectFit: 'cover',
-            pointerEvents: 'none',
-            opacity: showOriginal ? 1 : 0.85,
-            transition: 'opacity 0.2s ease'
-          }}
-        />
+        {/* Backdrop render */}
+        {backdropMode === 'photo' && referencePhoto ? (
+          <img
+            src={referencePhoto}
+            alt="Base Photo"
+            draggable="false"
+            style={{
+              height: '100%',
+              width: '100%',
+              objectFit: 'cover',
+              pointerEvents: 'none',
+              opacity: 0.85
+            }}
+          />
+        ) : (
+          /* Clean Minimalist Fashion Mannequin Vector */
+          <div 
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              backgroundColor: '#FAF9F6', 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              position: 'relative' 
+            }}
+          >
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundImage: 'radial-gradient(var(--border-color) 1px, transparent 1px)', backgroundSize: '16px 16px', opacity: 0.5 }} />
+
+            <svg 
+              viewBox="0 0 360 380" 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                position: 'absolute', 
+                top: 0, 
+                left: 0, 
+                pointerEvents: 'none' 
+              }}
+            >
+              <g 
+                fill={userProfile.skinToneHex || '#EAD4C3'} 
+                stroke="var(--accent-gold)" 
+                strokeWidth="1.5" 
+                opacity="0.85"
+              >
+                {/* Head */}
+                <ellipse cx="180" cy="52" rx="14" ry="19" />
+                
+                {/* Neck */}
+                <path d="M 174,70 C 174,78 174,80 174,80 L 186,80 C 186,80 186,78 186,70 Z" />
+                
+                {/* Torso/Body Shape */}
+                <path d={getMannequinPath(userProfile.bodyShape)} />
+
+                {/* Left Arm */}
+                <path 
+                  d={`M ${180 - getShoulderWidth(userProfile.bodyShape)},95 C ${180 - getShoulderWidth(userProfile.bodyShape) - 15},130 ${180 - getShoulderWidth(userProfile.bodyShape) - 18},180 ${180 - getShoulderWidth(userProfile.bodyShape) - 12},220`}
+                  fill="none"
+                />
+
+                {/* Right Arm */}
+                <path 
+                  d={`M ${180 + getShoulderWidth(userProfile.bodyShape)},95 C ${180 + getShoulderWidth(userProfile.bodyShape) + 15},130 ${180 + getShoulderWidth(userProfile.bodyShape) + 18},180 ${180 + getShoulderWidth(userProfile.bodyShape) + 12},220`}
+                  fill="none"
+                />
+              </g>
+            </svg>
+          </div>
+        )}
 
         {/* Processing Shimmer Loader */}
         {isProcessing && (
@@ -374,7 +486,7 @@ const InteractiveCanvas = ({ referencePhoto, topItem, bottomItem, outerwearItem,
         </div>
 
         {/* Toggle suggestion items on top */}
-        {!showOriginal && layers.map((layer) => (
+        {layers.map((layer) => (
           <div
             key={layer.id}
             onMouseDown={(e) => handleMouseDown(layer.id, e)}
@@ -407,50 +519,60 @@ const InteractiveCanvas = ({ referencePhoto, topItem, bottomItem, outerwearItem,
         ))}
 
         {/* View mode actions */}
-        <div style={{ position: 'absolute', bottom: '12px', right: '12px', display: 'flex', gap: '8px', zIndex: 50 }}>
-          <button
-            onClick={() => setShowOriginal(prev => !prev)}
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.85)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '20px',
-              padding: '6px 12px',
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: showOriginal ? 'var(--accent-gold)' : 'var(--text-primary)',
-              backdropFilter: 'blur(4px)'
-            }}
-          >
-            <Eye size={12} /> {showOriginal ? 'Show Try-On' : 'Show Original'}
-          </button>
-          <button
-            onClick={resetLayers}
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.85)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '20px',
-              padding: '6px 12px',
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: 'var(--text-primary)',
-              backdropFilter: 'blur(4px)'
-            }}
-          >
-            <RefreshCw size={10} /> Reset
-          </button>
+        <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', display: 'flex', justifyContent: 'space-between', zIndex: 50, pointerEvents: 'none' }}>
+          {/* Left: Backdrop Mode Toggle */}
+          <div style={{ display: 'flex', gap: '6px', pointerEvents: 'auto' }}>
+            <button
+              onClick={() => setBackdropMode(prev => prev === 'mannequin' ? 'photo' : 'mannequin')}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '20px',
+                padding: '6px 12px',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: 'var(--text-primary)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                backdropFilter: 'blur(4px)'
+              }}
+            >
+              <Eye size={12} color="var(--accent-gold)" />
+              {backdropMode === 'mannequin' ? 'Use My Photo' : 'Use Silhouette'}
+            </button>
+          </div>
+
+          {/* Right: Reset Button */}
+          <div style={{ display: 'flex', gap: '6px', pointerEvents: 'auto' }}>
+            <button
+              onClick={resetLayers}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '20px',
+                padding: '6px 12px',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: 'var(--text-primary)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                backdropFilter: 'blur(4px)'
+              }}
+            >
+              <RefreshCw size={10} /> Reset
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Control HUD Menu */}
-      {!showOriginal && activeLayer && (
+      {activeLayer && (
         <div 
           className="vogue-card" 
           style={{ 
