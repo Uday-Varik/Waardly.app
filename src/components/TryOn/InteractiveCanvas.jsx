@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Layers, Move, RefreshCw, ZoomIn, RotateCw, Eye } from 'lucide-react';
+import { Layers, Move, RefreshCw, ZoomIn, RotateCw, Eye, Sparkles, Loader2 } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 
 // Helper to remove solid white background on the fly using a border-aware flood-fill algorithm
@@ -159,7 +159,7 @@ const getMannequinPath = (shape) => {
   `;
 };
 
-const InteractiveCanvas = ({ referencePhoto, topItem, bottomItem, outerwearItem, footwearItem }) => {
+const InteractiveCanvas = ({ referencePhoto, topItem, bottomItem, outerwearItem, footwearItem, occasion }) => {
   const { userProfile } = useContext(AppContext);
   const containerRef = useRef(null);
   const [layers, setLayers] = useState([]);
@@ -167,6 +167,74 @@ const InteractiveCanvas = ({ referencePhoto, topItem, bottomItem, outerwearItem,
   const [backdropMode, setBackdropMode] = useState('photo'); // 'mannequin' or 'photo'
   const [containerWidth, setContainerWidth] = useState(360);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // AI Diffusion states
+  const [isDiffusing, setIsDiffusing] = useState(false);
+  const [diffusionProgress, setDiffusionProgress] = useState(0);
+  const [diffusionLogs, setDiffusionLogs] = useState('');
+  const [showDiffusionResult, setShowDiffusionResult] = useState(false);
+  const [compiledPrompt, setCompiledPrompt] = useState('');
+
+  // Reset diffusion view if items change
+  useEffect(() => {
+    setShowDiffusionResult(false);
+  }, [topItem, bottomItem, outerwearItem, footwearItem]);
+
+  // Compile prompt from all user preferences
+  const compileTryOnPrompt = () => {
+    const gender = userProfile.gender || 'Female';
+    const bodyShape = userProfile.bodyShape || 'Hourglass';
+    const styleGoal = userProfile.styleGoal || 'Effortless Chic';
+    const skinTone = userProfile.skinToneHex || '#EAD4C3';
+    const undertone = userProfile.undertone || 'Neutral';
+    const season = userProfile.season || 'Summer';
+    const fitStyle = userProfile.fitStyle || 'Tailored';
+    const palettePref = userProfile.colorPalettePref || 'Neutrals';
+
+    const items = [];
+    if (topItem) items.push(topItem.name);
+    if (bottomItem) items.push(bottomItem.name);
+    if (outerwearItem) items.push(outerwearItem.name);
+    if (footwearItem) items.push(footwearItem.name);
+
+    const itemsText = items.length > 0 
+      ? `wearing ${items.slice(0, -1).join(', ')}${items.length > 1 ? ' and ' : ''}${items[items.length - 1]}`
+      : 'in curated luxury essentials';
+
+    return `A high-fashion studio photoshoot of a ${gender.toLowerCase()} model with a ${bodyShape.toLowerCase()} silhouette, ${skinTone} skin tone with ${undertone.toLowerCase()} undertones, matched to the ${season.toLowerCase()} color season. The model is ${itemsText}, styled in a ${styleGoal.toLowerCase()} aesthetic with a ${fitStyle.toLowerCase()} fit, following a ${palettePref.toLowerCase()} color palette. Solid neutral studio backdrop, professional studio lighting, clean minimal composition, photo-realistic details, 8k resolution.`;
+  };
+
+  // Run AI Try-On Simulated Diffusion
+  const runAIDiffusion = () => {
+    const prompt = compileTryOnPrompt();
+    setCompiledPrompt(prompt);
+    setIsDiffusing(true);
+    setDiffusionProgress(0);
+    setDiffusionLogs('Compiling style profile and outfit parameters...');
+
+    const logs = [
+      { progress: 15, text: 'Compiling style profile and outfit parameters...' },
+      { progress: 35, text: 'Initializing latent diffusion noise matrix...' },
+      { progress: 60, text: 'Synthesizing fabric texture and layout structure...' },
+      { progress: 85, text: 'Refining skin tones and studio lighting contours...' },
+      { progress: 100, text: 'Denoising final high-fidelity render...' }
+    ];
+
+    let currentLogIndex = 0;
+    const interval = setInterval(() => {
+      currentLogIndex++;
+      if (currentLogIndex < logs.length) {
+        setDiffusionProgress(logs[currentLogIndex].progress);
+        setDiffusionLogs(logs[currentLogIndex].text);
+      } else {
+        clearInterval(interval);
+        setTimeout(() => {
+          setIsDiffusing(false);
+          setShowDiffusionResult(true);
+        }, 500);
+      }
+    }, 600);
+  };
 
   // Measure container width on mount
   useEffect(() => {
@@ -589,10 +657,190 @@ const InteractiveCanvas = ({ referencePhoto, topItem, bottomItem, outerwearItem,
             </button>
           </div>
         </div>
+
+        {/* AI Diffusion Loader Overlay */}
+        {isDiffusing && (
+          <div 
+            style={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0, 
+              backgroundColor: 'rgba(250, 249, 246, 0.9)', 
+              backdropFilter: 'blur(10px)', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              padding: '24px',
+              gap: '16px',
+              zIndex: 110 
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+              <Loader2 size={32} color="var(--accent-gold)" style={{ animation: 'spin 1.5s linear infinite' }} />
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                AI Studio Synthesis
+              </span>
+            </div>
+
+            {/* Progress bar */}
+            <div style={{ width: '80%', height: '4px', backgroundColor: 'var(--border-color)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div 
+                style={{ 
+                  width: `${diffusionProgress}%`, 
+                  height: '100%', 
+                  backgroundColor: 'var(--accent-gold)', 
+                  transition: 'width 0.4s ease' 
+                }} 
+              />
+            </div>
+
+            <div style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', fontFamily: 'monospace', textAlign: 'center' }}>
+              {diffusionLogs}
+            </div>
+
+            {/* Compiled Prompt HUD box */}
+            <div 
+              style={{ 
+                marginTop: '12px', 
+                padding: '10px 14px', 
+                backgroundColor: 'rgba(0, 0, 0, 0.03)', 
+                border: '1px solid var(--border-color)', 
+                borderRadius: 'var(--radius-sm)', 
+                maxWidth: '90%', 
+                maxHeight: '100px', 
+                overflowY: 'auto' 
+              }}
+            >
+              <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', fontWeight: 600 }}>
+                LLM Synthesis Prompt
+              </div>
+              <p style={{ fontSize: '0.65rem', color: 'var(--text-primary)', margin: 0, lineHeight: 1.4, textAlign: 'left', fontStyle: 'italic' }}>
+                {compiledPrompt}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* AI Diffusion Result Viewport */}
+        {showDiffusionResult && (
+          <div 
+            style={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0, 
+              backgroundColor: '#FAF9F6', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              zIndex: 90 
+            }}
+          >
+            <img
+              src={`/generated_tryon/${(userProfile.gender || 'Female').toLowerCase() === 'unisex' ? 'female' : (userProfile.gender || 'Female').toLowerCase()}_${(occasion || 'Casual').toLowerCase()}.png`}
+              alt="AI Try-On Result"
+              style={{
+                height: '100%',
+                width: '100%',
+                objectFit: 'contain',
+                backgroundColor: '#FAF9F6'
+              }}
+            />
+            {/* AI Synthesized Look Badge */}
+            <div 
+              style={{ 
+                position: 'absolute', 
+                top: '12px', 
+                right: '12px', 
+                backgroundColor: 'rgba(179, 146, 102, 0.9)', 
+                color: '#FFF', 
+                padding: '4px 10px', 
+                fontSize: '0.65rem', 
+                fontWeight: 600, 
+                borderRadius: '12px', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.05em', 
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '4px' 
+              }}
+            >
+              <Sparkles size={10} /> AI Synthesized Look
+            </div>
+
+            {/* Technical crosshair overlay for fit HUD feel */}
+            <div style={{ position: 'absolute', top: '15px', left: '15px', color: 'var(--accent-gold)', fontSize: '0.65rem', fontFamily: 'monospace', opacity: 0.6 }}>
+              AI STUDIO VIEW // RENDERED
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* AI Try-On Action Bar */}
+      {layers.length > 0 && !showDiffusionResult && (
+        <button
+          onClick={runAIDiffusion}
+          style={{
+            width: '100%',
+            padding: '12px 24px',
+            backgroundColor: 'var(--accent-gold)',
+            color: '#FFF',
+            border: 'none',
+            borderRadius: 'var(--radius-md)',
+            fontWeight: 600,
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            boxShadow: '0 4px 12px rgba(179, 146, 102, 0.2)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            transition: 'all 0.2s ease',
+            marginTop: '-4px'
+          }}
+          onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+          onMouseLeave={(e) => e.target.style.opacity = '1'}
+        >
+          <Sparkles size={16} /> Generate AI Try-On Image
+        </button>
+      )}
+
+      {/* Return button if showing diffusion result */}
+      {showDiffusionResult && (
+        <button
+          onClick={() => setShowDiffusionResult(false)}
+          style={{
+            alignSelf: 'center',
+            padding: '8px 20px',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            border: '1px solid var(--accent-gold)',
+            color: 'var(--accent-gold)',
+            backgroundColor: 'transparent',
+            borderRadius: '20px',
+            cursor: 'pointer',
+            marginTop: '-4px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }}
+        >
+          <Layers size={14} /> Back to Interactive Layers
+        </button>
+      )}
+
       {/* Control HUD Menu */}
-      {activeLayer && (
+      {activeLayer && !showDiffusionResult && (
         <div 
           className="vogue-card" 
           style={{ 

@@ -320,6 +320,7 @@ const Home = () => {
             bottomItem={activeTryOn.bottom}
             outerwearItem={activeTryOn.outerwear}
             footwearItem={activeTryOn.footwear}
+            occasion={occasion}
           />
 
           {isTryOnEmpty && (
