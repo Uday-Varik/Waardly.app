@@ -2,8 +2,14 @@
 
 // Helper to convert Hex string (#RRGGBB) to RGB object
 export function hexToRgb(hex) {
-  const cleanHex = hex.replace(/^#/, '');
+  let cleanHex = hex.replace(/^#/, '');
+  if (cleanHex.length === 3) {
+    cleanHex = cleanHex.split('').map(char => char + char).join('');
+  }
   const bigint = parseInt(cleanHex, 16);
+  if (isNaN(bigint)) {
+    return { r: 0, g: 0, b: 0 };
+  }
   const r = (bigint >> 16) & 255;
   const g = (bigint >> 8) & 255;
   const b = bigint & 255;

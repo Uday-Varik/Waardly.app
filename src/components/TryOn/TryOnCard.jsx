@@ -87,10 +87,30 @@ const TryOnCard = ({ top, bottom, outerwear, footwear, occasion, contextText, on
 
   // 5-Layer justification strings based on the outfit and user profile
   const layersJustification = {
-    occasion: `This ensemble fits the '${occasion}' aesthetic perfectly. The ${top?.name || 'garment'} offers structured coverage suitable for ${contextText || 'the occasion'}, while the ${bottom?.name || 'pants'} keeps it sophisticated yet functional.`,
-    color: `By pairing the ${top?.colorName || 'garment'} (${top?.colorHex}) with the ${bottom?.colorName || 'garment'} (${bottom?.colorHex}), we create a balanced color block. The outfit uses sophisticated contrast to maintain visual interest.`,
-    body: `The ${userProfile.bodyShape} silhouette is flattered by the drape of the ${bottom?.name || 'bottoms'} and the fitted cut of the ${top?.name || 'top'}. This creates proportion balance, highlighting your shoulders and narrowing the waist.`,
-    skin: `These colors were selected directly from your seasonal color palette: ${userProfile.season}. The ${top?.colorName} complements your skin's ${userProfile.undertone} undertone, reflecting light to brighten your complexion.`,
+    occasion: top && bottom 
+      ? `This ensemble fits the '${occasion}' aesthetic perfectly. The ${top.name} offers structured coverage suitable for ${contextText || 'the occasion'}, while the ${bottom.name} keeps it sophisticated yet functional.`
+      : top 
+      ? `This style fits the '${occasion}' aesthetic perfectly. The ${top.name} offers structured coverage suitable for ${contextText || 'the occasion'} as the centerpiece of your look.`
+      : `This style fits the '${occasion}' aesthetic perfectly. The ${bottom.name} grounds your look with structured coverage suitable for ${contextText || 'the occasion'}.`,
+    
+    color: top && bottom 
+      ? `By pairing the ${top.colorName} (${top.colorHex}) with the ${bottom.colorName} (${bottom.colorHex}), we create a balanced color block. The outfit uses sophisticated contrast to maintain visual interest.`
+      : top 
+      ? `The ${top.colorName} (${top.colorHex}) acts as the main focal color of your look, drawing attention to your upper silhouette and pairing cleanly with neutral bases.`
+      : `The ${bottom.colorName} (${bottom.colorHex}) grounds your silhouette, creating a sleek tailored base layer for your outfit.`,
+    
+    body: top && bottom 
+      ? `The ${userProfile.bodyShape} silhouette is flattered by the drape of the ${bottom.name} and the fitted cut of the ${top.name}. This creates proportion balance, highlighting your shoulders and narrowing the waist.`
+      : top 
+      ? `The fitted cut of the ${top.name} flatters your ${userProfile.bodyShape} silhouette, aligning with your styling focus.`
+      : `The drape and line of the ${bottom.name} flatters your ${userProfile.bodyShape} silhouette, balancing your lower proportions.`,
+    
+    skin: top 
+      ? `These colors were selected directly from your seasonal color palette: ${userProfile.season}. The ${top.colorName} complements your skin's ${userProfile.undertone} undertone, reflecting light to brighten your complexion.`
+      : bottom 
+      ? `These colors were selected directly from your seasonal color palette: ${userProfile.season}. The ${bottom.colorName} complements your skin's ${userProfile.undertone} undertone, blending naturally with your complexion.`
+      : `This look matches your seasonal color palette: ${userProfile.season}.`,
+    
     icon: styleIcon ? styleIcon.quote : '"Style is a way to say who you are without having to speak."'
   };
 

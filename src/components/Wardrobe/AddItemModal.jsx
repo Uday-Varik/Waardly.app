@@ -100,6 +100,44 @@ const AddItemModal = ({ onClose }) => {
     };
   }, [cameraStream]);
 
+  // Compress and downscale base64 images to stay under localStorage limits
+  const compressImage = (base64Str, maxWidth = 400, maxHeight = 400) => {
+    return new Promise((resolve) => {
+      if (!base64Str || !base64Str.startsWith('data:')) {
+        resolve(base64Str);
+        return;
+      }
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = () => {
+        resolve(base64Str);
+      };
+    });
+  };
+
   // Capture photo
   const capturePhoto = () => {
     const video = videoRef.current;
@@ -112,9 +150,11 @@ const AddItemModal = ({ onClose }) => {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const dataUrl = canvas.toDataURL('image/jpeg');
-    setCapturedImage(dataUrl);
-    stopCamera();
-    runAITaggerSimulation(dataUrl, 'Captured Item');
+    compressImage(dataUrl).then(compressedUrl => {
+      setCapturedImage(compressedUrl);
+      stopCamera();
+      runAITaggerSimulation(compressedUrl, 'Captured Item');
+    });
   };
 
   // Upload file handler
@@ -123,8 +163,11 @@ const AddItemModal = ({ onClose }) => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        setCapturedImage(event.target.result);
-        runAITaggerSimulation(event.target.result, file.name.split('.')[0] || 'Uploaded Item');
+        const rawUrl = event.target.result;
+        compressImage(rawUrl).then(compressedUrl => {
+          setCapturedImage(compressedUrl);
+          runAITaggerSimulation(compressedUrl, file.name.split('.')[0] || 'Uploaded Item');
+        });
       };
       reader.readAsDataURL(file);
     }
