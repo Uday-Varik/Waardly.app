@@ -132,21 +132,29 @@ const getMannequinPath = (shape) => {
     wHip = 40;
   }
 
+  const cx = 180;
+  const lShoulder = cx - wShoulder;
+  const rShoulder = cx + wShoulder;
+  const lWaist = cx - wWaist;
+  const rWaist = cx + wWaist;
+  const lHip = cx - wHip;
+  const rHip = cx + wHip;
+
   // Center is 180, Neck connection ends at y=80 (left: 174, right: 186)
   return `
-    M 174,80 
-    C 165,85 165,90 ${180 - wShoulder},95 
-    C ${180 - wShoulder - 5},120 ${180 - wWaist - 15},155 ${180 - wWaist},180 
-    C ${180 - wWaist + 10},205 ${180 - wHip - 5},215 ${180 - wHip},240 
-    C ${180 - wHip},270 155,310 157,360
+    M ${cx - 6},80 
+    C ${cx - 15},85 ${cx - 15},90 ${lShoulder},95 
+    C ${lShoulder - 5},120 ${lWaist - 15},155 ${lWaist},180 
+    C ${lWaist + 10},205 ${lHip - 5},215 ${lHip},240 
+    C ${lHip},270 155,310 157,360
     L 172,360
-    C 172,320 178,290 180,265
+    C 172,320 178,290 ${cx},265
     C 182,290 188,320 188,360
     L 203,360
-    C 205,310 180 + wHip,270 ${180 + wHip},240
-    C ${180 + wHip + 5},215 ${180 + wWaist - 10},205 ${180 + wWaist},180
-    C ${180 + wWaist + 15},155 ${180 + wShoulder + 5},120 ${180 + wShoulder},95
-    C 195,90 195,85 186,80
+    C 205,310 ${rHip},270 ${rHip},240
+    C ${rHip + 5},215 ${rWaist - 10},205 ${rWaist},180
+    C ${rWaist + 15},155 ${rShoulder + 5},120 ${rShoulder},95
+    C ${cx + 15},90 ${cx + 15},85 ${cx + 6},80
     Z
   `;
 };
@@ -156,7 +164,7 @@ const InteractiveCanvas = ({ referencePhoto, topItem, bottomItem, outerwearItem,
   const containerRef = useRef(null);
   const [layers, setLayers] = useState([]);
   const [selectedLayerId, setSelectedLayerId] = useState(null);
-  const [backdropMode, setBackdropMode] = useState('mannequin'); // 'mannequin' or 'photo'
+  const [backdropMode, setBackdropMode] = useState('photo'); // 'mannequin' or 'photo'
   const [containerWidth, setContainerWidth] = useState(360);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -423,32 +431,44 @@ const InteractiveCanvas = ({ referencePhoto, topItem, bottomItem, outerwearItem,
                 pointerEvents: 'none' 
               }}
             >
-              <g 
+              {/* Mannequin Body filled with skin tone */}
+              <path 
+                d={getMannequinPath(userProfile.bodyShape)} 
                 fill={userProfile.skinToneHex || '#EAD4C3'} 
                 stroke="var(--accent-gold)" 
                 strokeWidth="1.5" 
                 opacity="0.85"
+              />
+
+              {/* Head & Neck filled with skin tone */}
+              <ellipse 
+                cx="180" 
+                cy="52" 
+                rx="14" 
+                ry="19" 
+                fill={userProfile.skinToneHex || '#EAD4C3'} 
+                stroke="var(--accent-gold)" 
+                strokeWidth="1.5" 
+                opacity="0.85"
+              />
+              
+              <path 
+                d="M 174,70 C 174,78 174,80 174,80 L 186,80 C 186,80 186,78 186,70 Z" 
+                fill={userProfile.skinToneHex || '#EAD4C3'} 
+                stroke="var(--accent-gold)" 
+                strokeWidth="1.5" 
+                opacity="0.85"
+              />
+
+              {/* Mannequin Arms (Strokes only, no fill to prevent visual warping) */}
+              <g 
+                fill="none" 
+                stroke="var(--accent-gold)" 
+                strokeWidth="1.5" 
+                opacity="0.85"
               >
-                {/* Head */}
-                <ellipse cx="180" cy="52" rx="14" ry="19" />
-                
-                {/* Neck */}
-                <path d="M 174,70 C 174,78 174,80 174,80 L 186,80 C 186,80 186,78 186,70 Z" />
-                
-                {/* Torso/Body Shape */}
-                <path d={getMannequinPath(userProfile.bodyShape)} />
-
-                {/* Left Arm */}
-                <path 
-                  d={`M ${180 - getShoulderWidth(userProfile.bodyShape)},95 C ${180 - getShoulderWidth(userProfile.bodyShape) - 15},130 ${180 - getShoulderWidth(userProfile.bodyShape) - 18},180 ${180 - getShoulderWidth(userProfile.bodyShape) - 12},220`}
-                  fill="none"
-                />
-
-                {/* Right Arm */}
-                <path 
-                  d={`M ${180 + getShoulderWidth(userProfile.bodyShape)},95 C ${180 + getShoulderWidth(userProfile.bodyShape) + 15},130 ${180 + getShoulderWidth(userProfile.bodyShape) + 18},180 ${180 + getShoulderWidth(userProfile.bodyShape) + 12},220`}
-                  fill="none"
-                />
+                <path d={`M ${180 - getShoulderWidth(userProfile.bodyShape)},95 C ${180 - getShoulderWidth(userProfile.bodyShape) - 15},130 ${180 - getShoulderWidth(userProfile.bodyShape) - 18},180 ${180 - getShoulderWidth(userProfile.bodyShape) - 12},220`} />
+                <path d={`M ${180 + getShoulderWidth(userProfile.bodyShape)},95 C ${180 + getShoulderWidth(userProfile.bodyShape) + 15},130 ${180 + getShoulderWidth(userProfile.bodyShape) + 18},180 ${180 + getShoulderWidth(userProfile.bodyShape) + 12},220`} />
               </g>
             </svg>
           </div>

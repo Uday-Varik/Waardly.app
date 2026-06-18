@@ -183,8 +183,8 @@ export const LUXURY_ESSENTIALS = [
     pattern: 'Solid',
     occasions: ['Casual', 'Date', 'Travel'],
     formalLevel: 'Smart-Casual',
-    image: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&q=80&w=300',
-    iconOverlay: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&q=80&w=150'
+    image: 'https://images.unsplash.com/photo-1544923246-77307dd654cb?auto=format&fit=crop&q=80&w=300',
+    iconOverlay: 'https://images.unsplash.com/photo-1544923246-77307dd654cb?auto=format&fit=crop&q=80&w=150'
   },
   {
     id: 'item_11',
@@ -209,8 +209,8 @@ export const LUXURY_ESSENTIALS = [
     pattern: 'Solid',
     occasions: ['Work', 'Date', 'Formal', 'Casual'],
     formalLevel: 'Smart-Casual',
-    image: 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&q=80&w=300',
-    iconOverlay: 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&q=80&w=150'
+    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=300',
+    iconOverlay: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=150'
   },
   {
     id: 'item_13',

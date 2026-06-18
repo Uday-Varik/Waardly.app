@@ -54,7 +54,7 @@ const AddItemModal = ({ onClose }) => {
       pattern: 'Solid',
       occasions: ['Date', 'Formal', 'Casual'],
       formalLevel: 'Smart-Casual',
-      image: 'https://images.unsplash.com/photo-1583496661160-fb48862c4a4e?auto=format&fit=crop&q=80&w=300'
+      image: 'https://images.unsplash.com/photo-1577900232427-18219b9166a0?auto=format&fit=crop&q=80&w=300'
     },
     {
       name: 'Chelsea Suede Boots',
@@ -64,7 +64,7 @@ const AddItemModal = ({ onClose }) => {
       pattern: 'Solid',
       occasions: ['Work', 'Date', 'Casual', 'Formal'],
       formalLevel: 'Smart-Casual',
-      image: 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&q=80&w=300'
+      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=300'
     }
   ];
 
